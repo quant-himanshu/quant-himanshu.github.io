@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Himanshu Sharma: battery state estimation, Simulink modelling and physics-informed machine learning. Open to freelance work.">
+<title>Himanshu Sharma | Battery State Estimation and Simulink</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: cinematic dark page. Hero has layered glows, a drifting starfield and a perspective grid floor
+     behind a glass instrument panel. A keyword band, an About section, and a conceptual diagram on every
+     project card add depth. Cards light up under the pointer. Single dark look by choice. */
+  :root {
+    --bg: #07090d;
+    --bg-raised: #0d1117;
+    --line: #1f2733;
+    --line-bright: #33445a;
+    --fg: #eef2f6;
+    --body: #c3cbd6;
+    --muted: #8d99a8;
+    --accent: #ff6a2b;
+    --accent-ink: #1a0a02;
+    --trace: #9fd0ff;
+    --font-display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+    background: var(--bg); z-index: 30;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--trace); outline-offset: 3px; }
+  .wrap {
+    position: relative; width: 100%; max-width: 1200px; margin-inline: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .mono { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .ph { color: var(--accent); border-bottom: 1px dashed var(--accent); }
+  .grad {
+    background: linear-gradient(180deg, #ffffff 25%, #8fa6bf 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+
+  /* Header */
+  .top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: rgba(7, 9, 13, 0.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+  .brand { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; }
+  .nav { display: flex; gap: 28px; }
+  .nav a { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; color: var(--muted); transition: color .2s; }
+  .nav a:hover { color: var(--fg); }
+  @media (max-width: 700px) { .nav { display: none; } }
+  .progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+  /* Hero */
+  .hero {
+    position: relative; overflow: hidden; isolation: isolate;
+    padding-block: clamp(56px, 9vw, 120px) clamp(72px, 9vw, 130px);
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse 55% 55% at 88% 18%, rgba(255, 106, 43, 0.20), transparent 62%),
+      radial-gradient(ellipse 50% 65% at 6% 0%, rgba(159, 208, 255, 0.14), transparent 65%),
+      var(--bg);
+  }
+  #stars { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
+  .floor {
+    position: absolute; left: -25%; right: -25%; bottom: -1px; height: 46%; z-index: -1;
+    background-image:
+      linear-gradient(rgba(159, 208, 255, 0.22) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(159, 208, 255, 0.22) 1px, transparent 1px);
+    background-size: 72px 72px;
+    transform: perspective(520px) rotateX(64deg); transform-origin: 50% 100%;
+    -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 90%);
+    mask-image: linear-gradient(to top, #000 10%, transparent 90%);
+    animation: drift 5s linear infinite;
+  }
+  @keyframes drift { to { background-position: 0 72px, 0 0; } }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
+  h1 {
+    font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+    font-size: clamp(3.4rem, 10.5vw, 8rem); line-height: .9; letter-spacing: .005em;
+    margin: 18px 0 24px; text-wrap: balance;
+  }
+  h1 em { font-style: normal; color: var(--accent); text-shadow: 0 0 48px rgba(255, 106, 43, 0.55); }
+  .lede { max-width: 54ch; color: var(--body); margin: 0 0 32px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-block; padding: 14px 26px; text-decoration: none;
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    border: 1px solid var(--line-bright); color: var(--fg); background: rgba(255, 255, 255, 0.03); cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+  }
+  .btn:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .btn.solid { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 500; box-shadow: 0 0 36px -4px rgba(255, 106, 43, 0.65); }
+  .btn.solid:hover { background: var(--fg); border-color: var(--fg); color: var(--bg); box-shadow: 0 0 36px -4px rgba(238, 242, 246, 0.5); }
+
+  /* Glass instrument panel */
+  .scope {
+    position: relative; min-width: 0;
+    background: rgba(13, 17, 23, 0.68);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid rgba(159, 208, 255, 0.2);
+    box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9), 0 0 100px -20px rgba(255, 106, 43, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .scope::before, .scope::after { content: ""; position: absolute; width: 16px; height: 16px; border: 2px solid var(--accent); pointer-events: none; }
+  .scope::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+  .scope::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+  .scope-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid rgba(159, 208, 255, 0.14); }
+  .scope canvas { display: block; width: 100%; aspect-ratio: 16 / 10; }
+  .readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid rgba(159, 208, 255, 0.14); }
+  .readout div { padding: 12px 16px; border-right: 1px solid rgba(159, 208, 255, 0.14); min-width: 0; }
+  .readout div:last-child { border-right: 0; }
+  .readout b { display: block; font-family: var(--font-mono); font-weight: 500; font-size: 18px; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+  /* Keyword band */
+  .ticker { overflow: hidden; white-space: nowrap; border-bottom: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); padding-block: 16px; }
+  .ticker-track { display: inline-flex; animation: tick 45s linear infinite; will-change: transform; }
+  .tg { display: flex; flex: none; }
+  .tg span { display: inline-flex; align-items: center; gap: 36px; padding-right: 36px; font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .tg span::after { content: ""; width: 7px; height: 7px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  /* Proof numbers */
+  .stats { border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(159, 208, 255, 0.05), transparent); }
+  .stats .grid { border: 0; background: var(--line-bright); }
+  .stat { background: var(--bg); padding: 36px 28px; }
+  .stat b { display: block; font-family: var(--font-display); font-weight: 700; font-size: clamp(3.4rem, 7vw, 5.4rem); line-height: .95; margin-bottom: 10px; }
+  .stat .mono { display: block; line-height: 1.5; }
+
+  /* Sections */
+  section { padding-block: clamp(56px, 8vw, 104px); border-bottom: 1px solid var(--line); }
+  .sec-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; margin-bottom: 48px; align-items: start; }
+  @media (max-width: 800px) { .sec-head { grid-template-columns: minmax(0, 1fr); gap: 12px; } }
+  h2 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: clamp(2.2rem, 5.5vw, 4rem); line-height: .95; margin: 0; text-wrap: balance; }
+  h2::before { content: ""; display: block; width: 44px; height: 3px; background: var(--accent); box-shadow: 0 0 18px rgba(255, 106, 43, 0.8); margin-bottom: 18px; }
+  .sec-head p { margin: 0; max-width: 58ch; color: var(--body); }
+  h3 { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 1.65rem; line-height: 1.05; margin: 0 0 12px; }
+
+  /* About */
+  .about { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: clamp(36px, 6vw, 80px); align-items: center; }
+  @media (max-width: 760px) { .about { grid-template-columns: minmax(0, 1fr); } }
+  .avatar-wrap { padding: 16px; justify-self: center; width: 100%; max-width: 290px; }
+  .avatar {
+    position: relative; aspect-ratio: 1; width: 100%; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 30% 25%, rgba(159, 208, 255, 0.28), transparent 60%), var(--bg-raised);
+    border: 1px solid var(--line-bright);
+    box-shadow: 0 0 0 10px rgba(159, 208, 255, 0.04), 0 0 90px -10px rgba(255, 106, 43, 0.45);
+  }
+  .avatar::before { content: ""; position: absolute; inset: -16px; border-radius: 50%; border: 1px dashed rgba(255, 106, 43, 0.6); animation: spin 50s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .avatar b { font-family: var(--font-display); font-weight: 700; font-size: clamp(4.5rem, 12vw, 6.5rem); letter-spacing: .04em; }
+  .about p { color: var(--body); max-width: 60ch; margin: 24px 0 24px; }
+  .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .facts li { display: flex; align-items: baseline; gap: 14px; font-size: 15px; color: var(--body); }
+  .facts li::before { content: ""; flex: none; width: 7px; height: 7px; background: var(--accent); box-shadow: 0 0 10px var(--accent); transform: translateY(-1px); }
+
+  .grid { display: grid; gap: 1px; background: var(--line-bright); border: 1px solid var(--line-bright); }
+  .grid > * { min-width: 0; }
+  .g4 { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); }
+  .grid p { margin: 0 0 18px; color: var(--body); font-size: 16px; }
+  .grid .mono { display: block; margin-top: 6px; }
+
+  /* Cards light up under the pointer */
+  .card {
+    position: relative; overflow: hidden; padding: 28px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 60%), var(--bg);
+  }
+  .card > * { position: relative; z-index: 1; }
+  .card::before {
+    content: ""; position: absolute; inset: 0; z-index: 0; opacity: 0; transition: opacity .25s; pointer-events: none;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(159, 208, 255, 0.16), transparent 45%);
+  }
+  .card::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; z-index: 2;
+    background: var(--accent); box-shadow: 0 0 16px var(--accent);
+    transform: scaleX(0); transform-origin: left; transition: transform .35s ease;
+  }
+  .card:hover::before { opacity: 1; }
+  .card:hover::after { transform: scaleX(1); }
+
+  /* Conceptual diagrams on project cards */
+  .viz { position: relative; margin-bottom: 22px; border: 1px solid var(--line); background: rgba(7, 9, 13, 0.7); }
+  .viz svg { display: block; width: 100%; height: auto; }
+  .viz .mono { position: absolute; left: 10px; top: 8px; margin: 0; font-size: 10px; letter-spacing: .12em; }
+  .viz text { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; fill: var(--body); text-anchor: middle; }
+
+  .chip { display: inline-block; border: 1px solid var(--accent); color: var(--accent); background: rgba(255, 106, 43, 0.08); padding: 2px 10px; margin-bottom: 18px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+  .mission dl { margin: 0; display: grid; gap: 12px; }
+  .mission dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .mission dd { margin: 0; font-size: 15px; color: var(--body); }
+
+  .fact h3 { margin-bottom: 4px; }
+  .fact .mono { margin: 0 0 14px; }
+  .fact p { margin: 0; font-size: 15px; }
+
+  .stack-group + .stack-group { margin-top: 32px; }
+  .stack-group .mono { display: block; margin-bottom: 12px; }
+  .stack { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .stack li { border: 1px solid var(--line-bright); padding: 10px 18px; font-family: var(--font-mono); font-size: 14px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)); transition: border-color .2s, box-shadow .2s; }
+  .stack li:hover { border-color: var(--accent); box-shadow: 0 0 22px -6px rgba(255, 106, 43, 0.7); }
+
+  .steps { counter-reset: step; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 1px; background: var(--line-bright); border: 1px solid var(--line-bright); margin: 0; padding: 0; list-style: none; }
+  .steps li { counter-increment: step; background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 60%), var(--bg); padding: 24px; min-width: 0; font-size: 15px; color: var(--body); }
+  .steps li::before { content: "Step " counter(step); display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .steps strong { display: block; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 1.4rem; color: var(--fg); margin-bottom: 6px; }
+
+  /* Contact */
+  .contact {
+    background:
+      radial-gradient(ellipse 70% 90% at 85% 110%, rgba(255, 106, 43, 0.22), transparent 62%),
+      radial-gradient(ellipse 50% 70% at 0% 0%, rgba(159, 208, 255, 0.10), transparent 65%),
+      var(--bg);
+  }
+  .contact h2 { font-size: clamp(2.8rem, 8vw, 6.4rem); max-width: 14ch; margin-bottom: 36px; }
+  .mailrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 32px; }
+  .mail { font-family: var(--font-mono); font-size: clamp(15px, 3.6vw, 22px); overflow-wrap: anywhere; user-select: all; }
+  .links { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; padding: 0; list-style: none; }
+  .links a { font-family: var(--font-mono); font-size: 13px; letter-spacing: .06em; color: var(--trace); overflow-wrap: anywhere; }
+  footer { padding-block: 28px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .floor, .ticker-track, .avatar::before { animation: none; }
+    .card::after, .card::before { transition: none; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">Himanshu Sharma</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#missions">Projects</a>
+      <a href="#background">Background</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+  <div class="progress" id="prog"></div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <canvas id="stars" aria-hidden="true"></canvas>
+    <div class="floor" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div>
+        <span class="mono">EV and battery systems · State estimation · Simulink</span>
+        <h1><span class="grad">Battery models that</span> <em>hold up.</em></h1>
+        <p class="lede">I am a pre-final year B.Tech student in Electric Vehicle Engineering. I work on battery state estimation, battery management systems and physics-informed machine learning, and I take part-time and freelance work in MATLAB and Simulink modelling, data analysis and ML prototypes.</p>
+        <div class="actions">
+          <a class="btn solid" href="#contact">Send me your brief</a>
+          <a class="btn" href="#missions">See the work</a>
+        </div>
+      </div>
+
+      <div class="scope">
+        <div class="scope-head">
+          <span class="mono">Cell voltage vs charge</span>
+          <span class="mono">Illustrative curve</span>
+        </div>
+        <canvas id="scope" width="640" height="400" role="img" aria-label="Cell voltage against state of charge for a simulated discharge. The shaded middle region is nearly flat, so voltage is a weak signal there."></canvas>
+        <div class="readout">
+          <div><span class="mono">SOC %</span><b id="r-s">50</b></div>
+          <div><span class="mono">Volts</span><b id="r-v">3.67</b></div>
+          <div><span class="mono">Signal</span><b id="r-g">Weak</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <div class="tg"><span>SOC estimation</span><span>SOH prediction</span><span>Extended Kalman filter</span><span>Physics-informed ML</span><span>Formal verification</span><span>Simulink</span><span>MATLAB</span><span>BMS safety</span></div>
+      <div class="tg"><span>SOC estimation</span><span>SOH prediction</span><span>Extended Kalman filter</span><span>Physics-informed ML</span><span>Formal verification</span><span>Simulink</span><span>MATLAB</span><span>BMS safety</span></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="wrap">
+      <div class="grid g4">
+        <div class="stat"><b class="grad">5</b><span class="mono">Public datasets used to test the OpenCATHODE estimator</span></div>
+        <div class="stat"><b class="grad">3</b><span class="mono">Safety properties found failing in foxBMS 2 contactor logic</span></div>
+        <div class="stat"><b class="grad">4</b><span class="mono">Projects in estimation, verification and physics-informed ML</span></div>
+        <div class="stat"><b class="grad">2026</b><span class="mono">Research internship at IIT Madras</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="about">
+    <div class="wrap about">
+      <div class="avatar-wrap"><div class="avatar"><b class="grad">HS</b></div></div>
+      <div>
+        <h2 class="grad">Estimation that admits its limits.</h2>
+        <p>At IIT Madras I worked on a hard version of battery state estimation: finding the state of charge in the flat-voltage region, where voltage barely changes and gives a weak signal. I test my methods against simple baselines and I report the cases where they do not win.</p>
+        <ul class="facts">
+          <li>Pre-final year B.Tech, Electric Vehicle Engineering, Aligarh Muslim University</li>
+          <li>Working on battery technologies and cell degradation</li>
+          <li>Open to part-time and freelance work</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="grad">What I do</h2>
+        <p>Four services, each with a clear deliverable and a fixed scope.</p>
+      </div>
+      <div class="grid g4">
+        <article class="card">
+          <h3>Battery state estimation</h3>
+          <p>State-of-charge and state-of-health estimation from voltage, current and temperature data, tested against simple baselines.</p>
+          <span class="mono">Delivers: model + test report</span>
+        </article>
+        <article class="card">
+          <h3>MATLAB and Simulink modelling</h3>
+          <p>Simulation models, debugging and code review for engineers, researchers and teams.</p>
+          <span class="mono">Delivers: working model + notes</span>
+        </article>
+        <article class="card">
+          <h3>Data analysis</h3>
+          <p>Messy test logs and spreadsheets cleaned, analysed and summarised so you can make a decision.</p>
+          <span class="mono">Delivers: clean data + summary</span>
+        </article>
+        <article class="card">
+          <h3>ML prototypes</h3>
+          <p>Physics-informed and data-driven prototypes, with a plain-language write-up of what works and what does not.</p>
+          <span class="mono">Delivers: prototype + report</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="missions">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="grad">Projects</h2>
+        <p>Four projects in battery estimation, safety verification and physics-informed ML. The diagrams are conceptual illustrations of each idea, not output from the projects.</p>
+      </div>
+      <div class="grid g2">
+        <article class="card mission">
+          <div class="viz">
+            <span class="mono">Illustration · estimate vs truth</span>
+            <svg viewBox="0 0 400 130" role="img" aria-label="Illustration of an estimate following a true value inside an uncertainty band">
+              <path d="M10 22 C90 30 150 52 210 64 C270 76 330 90 390 100 L390 120 C330 110 270 96 210 84 C150 72 90 50 10 42 Z" fill="rgba(159,208,255,0.12)"/>
+              <path d="M10 32 C90 40 150 62 210 74 C270 86 330 100 390 110" fill="none" stroke="#8d99a8" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <path d="M10 35 C35 27 60 50 95 43 C130 37 150 66 190 65 C225 64 245 86 280 80 C315 75 340 103 390 106" fill="none" stroke="#9fd0ff" stroke-width="2.2"/>
+              <circle cx="390" cy="106" r="4.5" fill="#ff6a2b"/>
+            </svg>
+          </div>
+          <span class="chip">State estimation</span>
+          <h3>OpenCATHODE Stack</h3>
+          <dl>
+            <div><dt>What it is</dt><dd>A dual extended Kalman filter that estimates battery state of charge and state of health together.</dd></div>
+            <div><dt>Evidence</dt><dd>Tested on five public datasets, including the cases where it did not beat simple baselines.</dd></div>
+          </dl>
+        </article>
+        <article class="card mission">
+          <div class="viz">
+            <span class="mono">Illustration · contactor states</span>
+            <svg viewBox="0 0 400 140" role="img" aria-label="Illustration of contactor states: open, precharge, closed, and a fault state">
+              <defs>
+                <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#8d99a8"/></marker>
+                <marker id="af" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#ff6a2b"/></marker>
+              </defs>
+              <rect x="14" y="36" width="84" height="34" fill="rgba(255,255,255,0.03)" stroke="#33445a"/>
+              <text x="56" y="57">OPEN</text>
+              <rect x="158" y="36" width="104" height="34" fill="rgba(255,255,255,0.03)" stroke="#33445a"/>
+              <text x="210" y="57">PRECHARGE</text>
+              <rect x="322" y="36" width="64" height="34" fill="rgba(255,255,255,0.03)" stroke="#33445a"/>
+              <text x="354" y="57">CLOSED</text>
+              <line x1="98" y1="53" x2="156" y2="53" stroke="#8d99a8" marker-end="url(#ah)"/>
+              <line x1="262" y1="53" x2="320" y2="53" stroke="#8d99a8" marker-end="url(#ah)"/>
+              <rect x="158" y="100" width="104" height="28" fill="rgba(255,106,43,0.08)" stroke="#ff6a2b"/>
+              <text x="210" y="118" style="fill:#ff6a2b">FAULT</text>
+              <line x1="210" y1="70" x2="210" y2="98" stroke="#ff6a2b" stroke-dasharray="3 3" marker-end="url(#af)"/>
+              <path d="M354 70 V114 H264" fill="none" stroke="#ff6a2b" stroke-dasharray="3 3" marker-end="url(#af)"/>
+            </svg>
+          </div>
+          <span class="chip">Formal verification</span>
+          <h3>foxBMS 2 contactor logic</h3>
+          <dl>
+            <div><dt>What it is</dt><dd>A class project that checks the contactor logic of the foxBMS 2 battery management system with Simulink Design Verifier.</dd></div>
+            <div><dt>Evidence</dt><dd>Found three safety properties that fail.</dd></div>
+          </dl>
+        </article>
+        <article class="card mission">
+          <div class="viz">
+            <span class="mono">Illustration · health vs cycles</span>
+            <svg viewBox="0 0 400 130" role="img" aria-label="Illustration of battery health falling with cycles, with a dashed prediction after the present point">
+              <line x1="230" y1="14" x2="230" y2="122" stroke="#8d99a8" stroke-dasharray="3 4"/>
+              <path d="M10 30 C110 34 190 42 230 54" fill="none" stroke="#9fd0ff" stroke-width="2.2"/>
+              <path d="M230 54 C290 72 330 94 390 116" fill="none" stroke="#ff6a2b" stroke-width="2.2" stroke-dasharray="5 4"/>
+              <g fill="#8d99a8">
+                <circle cx="20" cy="31" r="2.6"/><circle cx="50" cy="36" r="2.6"/><circle cx="80" cy="33" r="2.6"/><circle cx="110" cy="40" r="2.6"/>
+                <circle cx="140" cy="40" r="2.6"/><circle cx="170" cy="47" r="2.6"/><circle cx="200" cy="49" r="2.6"/><circle cx="228" cy="59" r="2.6"/>
+              </g>
+              <text x="230" y="130" style="fill:#8d99a8">NOW</text>
+            </svg>
+          </div>
+          <span class="chip">Physics-informed ML</span>
+          <h3>PULSE</h3>
+          <dl>
+            <div><dt>What it is</dt><dd>A physics-informed neural network that predicts battery state of health.</dd></div>
+            <div><dt>Data</dt><dd>NASA battery data.</dd></div>
+          </dl>
+        </article>
+        <article class="card mission">
+          <div class="viz">
+            <span class="mono">Illustration · few sensors</span>
+            <svg viewBox="0 0 400 130" role="img" aria-label="Illustration of four sensors around a hot region whose temperature is estimated">
+              <defs>
+                <radialGradient id="heat" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ff6a2b" stop-opacity="0.9"/><stop offset="1" stop-color="#ff6a2b" stop-opacity="0"/></radialGradient>
+              </defs>
+              <rect x="10" y="12" width="380" height="106" fill="none" stroke="#33445a"/>
+              <circle cx="205" cy="66" r="56" fill="url(#heat)"/>
+              <g stroke="rgba(159,208,255,0.4)">
+                <line x1="110" y1="40" x2="205" y2="66"/><line x1="300" y1="44" x2="205" y2="66"/>
+                <line x1="160" y1="104" x2="205" y2="66"/><line x1="262" y1="102" x2="205" y2="66"/>
+              </g>
+              <g fill="#9fd0ff">
+                <circle cx="110" cy="40" r="4"/><circle cx="300" cy="44" r="4"/><circle cx="160" cy="104" r="4"/><circle cx="262" cy="102" r="4"/>
+              </g>
+              <g stroke="#ffffff" stroke-width="1.5"><line x1="198" y1="66" x2="212" y2="66"/><line x1="205" y1="59" x2="205" y2="73"/></g>
+            </svg>
+          </div>
+          <span class="chip">Inverse problems</span>
+          <h3>Inverse PINN for tumor temperature</h3>
+          <dl>
+            <div><dt>What it is</dt><dd>A physics-informed neural network that estimates tumor temperature from only a few sensors.</dd></div>
+            <div><dt>Why it matters</dt><dd>Shows the same estimation thinking works outside batteries.</dd></div>
+          </dl>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="background">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="grad">Background</h2>
+        <p>Research experience, studies and recognition.</p>
+      </div>
+      <div class="grid g4">
+        <article class="card fact">
+          <h3>IIT Madras</h3>
+          <span class="mono">Project intern · May to Aug 2026</span>
+          <p>Worked under Prof. Raghunathan R at the Walmart Centre for Tech and Excellence on state-of-charge estimation in the flat-voltage region, where voltage gives a weak signal.</p>
+        </article>
+        <article class="card fact">
+          <h3>Aligarh Muslim University</h3>
+          <span class="mono">B.Tech, EV Engineering · 2024 to 2028</span>
+          <p>Pre-final year student focused on battery systems, state estimation and scientific machine learning.</p>
+        </article>
+        <article class="card fact">
+          <h3>Recognition</h3>
+          <span class="mono">Competitions</span>
+          <p>YUVAi Global Youth Challenge (IndiaAI), Stage 2 selectee. Delhi AI Grind, state finals wildcard participant.</p>
+        </article>
+        <article class="card fact">
+          <h3>Certification</h3>
+          <span class="mono">Job simulation</span>
+          <p>British Airways, Data Science Job Simulation.</p>
+        </article>
+      </div>
+
+      <div style="margin-top: 48px;">
+        <div class="stack-group">
+          <span class="mono">Tools</span>
+          <ul class="stack">
+            <li>MATLAB</li><li>Simulink</li><li>Simulink Design Verifier</li><li>Python</li><li>FastAPI</li><li>Next.js</li>
+          </ul>
+        </div>
+        <div class="stack-group">
+          <span class="mono">Methods</span>
+          <ul class="stack">
+            <li>Extended Kalman filter</li><li>SOC and SOH estimation</li><li>Physics-informed neural networks</li><li>Formal verification</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="process">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="grad">How a project runs</h2>
+        <p>Clients hire people who make the work predictable. This is what you can expect.</p>
+      </div>
+      <ol class="steps">
+        <li><strong>Brief</strong>You describe the problem and share a sample of the data.</li>
+        <li><strong>Quote</strong>I send scope, price and delivery date in writing.</li>
+        <li><strong>Build</strong>I work in small steps and show progress early.</li>
+        <li><strong>Review</strong>You test the result and I fix what you find.</li>
+        <li><strong>Handover</strong>You get the files, the code and a short guide.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <div class="wrap">
+      <span class="mono">Open to part-time and freelance work</span>
+      <h2 class="grad">Message me with what you need.</h2>
+      <div class="mailrow">
+        <span class="mail" id="mail">17novhimanshusharma@gmail.com</span>
+        <button class="btn solid" id="copy" type="button">Copy email</button>
+      </div>
+      <ul class="links">
+        <li><a href="https://www.linkedin.com/in/himanshu-sharma-879259324" target="_blank" rel="noopener">linkedin.com/in/himanshu-sharma-879259324</a></li>
+        <li><a href="https://github.com/quant-himanshu" target="_blank" rel="noopener">github.com/quant-himanshu</a></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="mono">© Himanshu Sharma</span>
+    <span class="mono">India · Works remotely</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- Starfield behind the hero ---- */
+  var sc = document.getElementById("stars"), sx = sc.getContext("2d");
+  var stars = [], SW = 0, SH = 0;
+  function sizeStars() {
+    var r = sc.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    SW = Math.max(r.width, 100); SH = Math.max(r.height, 100);
+    sc.width = Math.round(SW * dpr); sc.height = Math.round(SH * dpr);
+    sx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    stars = [];
+    var n = Math.round(SW * SH / 7000), i;
+    for (i = 0; i < n; i++) stars.push({ x: Math.random() * SW, y: Math.random() * SH, r: Math.random() * 1.3 + 0.3, p: Math.random() * 6.28, v: 0.2 + Math.random() * 0.6 });
+  }
+  function drawStars(t) {
+    sx.clearRect(0, 0, SW, SH);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i], a = 0.35 + 0.45 * Math.sin(t / 1000 * s.v + s.p);
+      sx.fillStyle = "rgba(200,225,255," + Math.max(0.08, a).toFixed(2) + ")";
+      sx.beginPath(); sx.arc(s.x, s.y, s.r, 0, 6.2832); sx.fill();
+    }
+  }
+
+  /* ---- Battery discharge plot ---- */
+  var canvas = document.getElementById("scope"), ctx = canvas.getContext("2d");
+  var rs = document.getElementById("r-s"), rv = document.getElementById("r-v"), rg = document.getElementById("r-g");
+  var TRACE = "#9fd0ff", ACCENT = "#ff6a2b", GRID = "rgba(159,208,255,0.12)", MUTED = "#8d99a8";
+  var VMIN = 3.0, VMAX = 4.2;
+  var W = 0, H = 0, pad = { l: 44, r: 14, t: 14, b: 30 };
+  var progress = reduce ? 0.5 : 0;
+
+  function size() {
+    var r = canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.max(r.width, 200); H = Math.max(r.height, 120);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function volt(s) { return 3.0 + 0.55 * (1 - Math.exp(-14 * s)) + 0.25 * s + 0.35 * Math.exp(-12 * (1 - s)); }
+  function slope(s) { return (volt(s + 0.005) - volt(s - 0.005)) / 0.01 / 100 * 1000; } /* mV per % SOC */
+  function px(s) { return pad.l + s * (W - pad.l - pad.r); }
+  function py(v) { return H - pad.b - (v - VMIN) / (VMAX - VMIN) * (H - pad.t - pad.b); }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var i, x, y, k, n = 120;
+    var band = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
+    band.addColorStop(0, "rgba(255,106,43,0.18)"); band.addColorStop(1, "rgba(255,106,43,0.03)");
+    ctx.fillStyle = band;
+    ctx.fillRect(px(0.3), pad.t, px(0.7) - px(0.3), H - pad.t - pad.b);
+    ctx.lineWidth = 1; ctx.strokeStyle = GRID; ctx.fillStyle = MUTED;
+    ctx.font = "10px 'IBM Plex Mono', monospace";
+    for (i = 0; i <= 4; i++) {
+      y = py(VMIN + (VMAX - VMIN) * i / 4);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText((VMIN + (VMAX - VMIN) * i / 4).toFixed(1), pad.l - 8, y);
+    }
+    for (i = 0; i <= 4; i++) {
+      x = px(i / 4);
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillText(String(i * 25), x, H - pad.b + 8);
+    }
+    ctx.fillStyle = ACCENT; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText("FLAT REGION", (px(0.3) + px(0.7)) / 2, pad.t + 6);
+    ctx.strokeStyle = "rgba(159,208,255,0.28)"; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (k = 0; k <= n; k++) { var s0 = k / n; if (k === 0) ctx.moveTo(px(s0), py(volt(s0))); else ctx.lineTo(px(s0), py(volt(s0))); }
+    ctx.stroke();
+    var cur = 1 - progress;
+    ctx.save();
+    ctx.shadowColor = TRACE; ctx.shadowBlur = 14;
+    ctx.strokeStyle = TRACE; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (k = 0; k <= n; k++) { var s1 = 1 - (k / n) * progress; if (k === 0) ctx.moveTo(px(s1), py(volt(s1))); else ctx.lineTo(px(s1), py(volt(s1))); }
+    ctx.stroke();
+    ctx.shadowColor = ACCENT; ctx.shadowBlur = 20; ctx.fillStyle = ACCENT;
+    ctx.beginPath(); ctx.arc(px(cur), py(volt(cur)), 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    var weak = slope(cur) < 3.5;
+    rs.textContent = String(Math.round(cur * 100));
+    rv.textContent = volt(cur).toFixed(2);
+    rg.textContent = weak ? "Weak" : "Strong";
+    rg.style.color = weak ? ACCENT : "";
+  }
+
+  var start = null, DUR = 8000, HOLD = 2000;
+  function frame(ts) {
+    if (start === null) start = ts;
+    var e = ts - start;
+    progress = Math.min(e / DUR, 1);
+    draw(); drawStars(ts);
+    if (e > DUR + HOLD) start = ts;
+    requestAnimationFrame(frame);
+  }
+  function layout() { size(); sizeStars(); draw(); drawStars(0); }
+  layout();
+  window.addEventListener("resize", layout);
+  if (!reduce) requestAnimationFrame(frame);
+
+  /* ---- Cards light up under the pointer ---- */
+  var cards = document.querySelectorAll(".card");
+  Array.prototype.forEach.call(cards, function (el) {
+    el.addEventListener("pointermove", function (e) {
+      var r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      el.style.setProperty("--my", (e.clientY - r.top) + "px");
+    });
+  });
+
+  /* ---- Scroll progress line ---- */
+  var prog = document.getElementById("prog");
+  function onScroll() {
+    var de = document.documentElement;
+    var max = de.scrollHeight - de.clientHeight;
+    var y = window.pageYOffset || de.scrollTop || 0;
+    prog.style.width = (max > 0 ? Math.min(100, y / max * 100) : 0) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---- Copy email ---- */
+  var btn = document.getElementById("copy"), mail = document.getElementById("mail");
+  btn.addEventListener("click", function () {
+    var text = mail.textContent;
+    function done() { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy email"; }, 1800); }
+    function select() {
+      try { var rg2 = document.createRange(); rg2.selectNodeContents(mail); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg2); } catch (e) {}
+      btn.textContent = "Press Ctrl+C";
+    }
+    try {
+      navigator.clipboard.writeText(text).then(done, select);
+    } catch (e) { select(); }
+  });
+})();
+</script>
+</body>
+</html>
